@@ -1,6 +1,7 @@
 import logo from '../logo.svg';
 
 function Boilerplate(props) {
+    
     return (
         <div>
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>

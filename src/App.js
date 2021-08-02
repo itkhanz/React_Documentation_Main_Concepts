@@ -1,12 +1,13 @@
 import './App.css';
 import Boilerplate from './components/boilerplate';
+import IntroducingJSX from './components/introJSX';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
         <Boilerplate />
-        <h1>Hello, world!</h1>
+        <IntroducingJSX />
       </header>
     </div>
   );
