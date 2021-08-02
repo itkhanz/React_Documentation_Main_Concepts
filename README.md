@@ -3,78 +3,49 @@
 
 *Learn concepts step by step*, start with our [guide to main concepts](https://reactjs.org/docs/getting-started.html#learn-react).
 
-## Introducing JSX
+## Rendering Elements
+
+* Elements are the smallest building blocks of React apps.
+* An element describes what you want to see on the screen:
 ```javascript
 const element = <h1>Hello, world!</h1>;
 ```
-* It is called **JSX**, and it is a syntax extension to JavaScript. JSX produces React “elements”. 
+>One might confuse elements with a more widely known concept of “components”.  Elements are what components are “made of”, and we encourage you to read this section before jumping ahead.
 
-### Embedding Expressions in JSX
-* You can put any valid JavaScript expression inside the curly braces in JSX.
+
+### Rendering an Element into the DOM
+* To render a React element into a root DOM node, pass both to ```ReactDOM.render()```:
+
 ```javascript
-function formatName(user) {
-  return user.firstName + ' ' + user.lastName;
+const element = <h1>Hello, world</h1>;
+ReactDOM.render(element, document.getElementById('root'));
+```
+
+### Updating the Rendered Element
+* React elements are immutable. Once you create an element, you can’t change its children or attributes.
+* With our knowledge so far, the only way to update the UI is to create a new element, and pass it to ```ReactDOM.render()``.
+Consider this ticking clock example:
+```javascript
+function tick() {
+  const element = (
+    <div>
+      <h1>Hello, world!</h1>
+      <h2>It is {new Date().toLocaleTimeString()}.</h2>
+    </div>
+  );
+  ReactDOM.render(element, document.getElementById('root'));
 }
 
-const user = {
-  firstName: 'Harper',
-  lastName: 'Perez'
-};
-
-const element = (
-  <h1>
-    Hello, {formatName(user)}!
-  </h1>
-);
-
-ReactDOM.render(
-  element,
-  document.getElementById('root')
-);
+setInterval(tick, 1000);
 ```
+It calls ```ReactDOM.render()``` every second from a ```setInterval()``` callback.
 
-### JSX is an Expression Too
-* you can use JSX inside of if statements and for loops, assign it to variables, accept it as arguments, and return it from functions:
-```javascript
-function getGreeting(user) {
-  if (user) {
-    return <h1>Hello, {formatName(user)}!</h1>;
-  }
-  return <h1>Hello, Stranger.</h1>;
-}
-```
+>In practice, most React apps only call ```ReactDOM.render()``` once. In the next sections we will learn how such code gets encapsulated into ```stateful components```.
 
-### Specifying Attributes with JSX
-* You may use quotes to specify string literals as attributes:
-```javascript
-const element = <div tabIndex="0"></div>;
-```
+### React Only Updates What’s Necessary
 
-* You may also use curly braces to embed a JavaScript expression in an attribute:
-```javascript
-const element = <img src={user.avatarUrl}></img>;
-```
+* React DOM compares the element and its children to the previous one, and only applies the DOM updates necessary to bring the DOM to the desired state.
 
->Since JSX is closer to JavaScript than to HTML, React DOM uses ```camelCase``` property naming convention instead of HTML attribute names.
->For example, ```class``` becomes ```className``` in JSX, and tabindex becomes tabIndex.
+![Rendering Element example animation](https://reactjs.org/c158617ed7cc0eac8f58330e49e48224/granular-dom-updates.gif "ticking clock element")
 
-### Specifying Children with JSX
-
-* If a tag is empty, you may close it immediately with />, like XML:
-```javascript
-const element = <img src={user.avatarUrl} />;
-```
-* JSX tags may contain children:
-```javascript
-const element = (
-  <div>
-    <h1>Hello!</h1>
-    <h2>Good to see you here.</h2>
-  </div>
-);
-```
-
-
-
-```javascript
-```
+* Even though we create an element describing the whole UI tree on every tick, only the text node whose contents have changed gets updated by React DOM.
