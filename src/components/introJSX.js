@@ -4,7 +4,7 @@ function IntroducingJSX(props) {
         if (user) {
           return (
             <div>
-              <h4>JSX is an Expression Too</h4>
+              <h3>JSX is an Expression Too</h3>
               <p>Embedding Expressions in JSX: {formatName(user)}!</p>
               <hr></hr>
               </div>

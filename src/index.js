@@ -7,17 +7,26 @@ import reportWebVitals from './reportWebVitals';
 // const element = <h1>Hello, world</h1>;
 // ReactDOM.render(element, document.getElementById('root'));
 
-// function tick() {
-//   const element = (
+
+// // Functional Compponent
+// function Clock(props) {
+//   return (
 //     <div>
-//       <h1>Rendering an Element into the DOM</h1>
-//       <h2>It is {new Date().toLocaleTimeString()}.</h2>
+//       <h1>Hello, world!</h1>
+//       <h2>It is {props.date.toLocaleTimeString()}.</h2>
 //     </div>
 //   );
-//   ReactDOM.render(element, document.getElementById('root'));
+// }
+
+// function tick() {
+//   ReactDOM.render(
+//     <Clock date={new Date()} />,
+//     document.getElementById('root')
+//   );
 // }
 
 // setInterval(tick, 1000);
+
 
 
 ReactDOM.render(

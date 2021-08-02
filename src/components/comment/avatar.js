@@ -3,6 +3,7 @@ function Avatar (props) {
         <img className="Avatar"
             src={props.user.avatarUrl}
             alt={props.user.name}
+            style={{borderRadius: '50%'}}
         />
     );
 }

@@ -3,6 +3,7 @@ import Boilerplate from './components/boilerplate';
 import IntroducingJSX from './components/introJSX';
 import Welcome from './components/welcome';
 import Comment from './components/comment/comment';
+import Clock from './components/clock/clock';
 
 function App() {
   const author = {
@@ -18,6 +19,7 @@ function App() {
         <IntroducingJSX />
         <Welcome name="Sara" />
         <Comment author={author} text="Extracting Components" date={today}/>
+        <Clock />
       </header>
     </div>
   );

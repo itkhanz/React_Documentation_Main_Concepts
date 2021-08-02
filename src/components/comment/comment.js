@@ -6,7 +6,7 @@ function Comment(props) {
     return (
       <div className="Comment">
         <div className="sectionDesc">
-          <h4>Components and Props</h4>
+          <h3>Components and Props</h3>
           <p>Extracting components might seem like grunt work at first, but having a palette of reusable components pays off in larger apps. A good rule of thumb is that if a part of your UI is used several times (Button, Panel, Avatar), or is complex enough on its own (App, FeedStory, Comment), it is a good candidate to be extracted to a separate component.</p>      
         </div>
       
