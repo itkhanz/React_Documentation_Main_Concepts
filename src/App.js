@@ -4,6 +4,7 @@ import IntroducingJSX from './components/introJSX';
 import Welcome from './components/welcome';
 import Comment from './components/comment/comment';
 import Clock from './components/clock/clock';
+import Toggle from './components/toggleEvent';
 
 function App() {
   const author = {
@@ -16,10 +17,13 @@ function App() {
     <div className="App">
       <header className="App-header">
         <Boilerplate />
+        {/* {getGreeting(user)} */}
+        {/* {element} */}
         <IntroducingJSX />
         <Welcome name="Sara" />
         <Comment author={author} text="Extracting Components" date={today}/>
         <Clock />
+        <Toggle />
       </header>
     </div>
   );
