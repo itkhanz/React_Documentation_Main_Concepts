@@ -5,6 +5,7 @@ import Welcome from './components/welcome';
 import Comment from './components/comment/comment';
 import Clock from './components/clock/clock';
 import Toggle from './components/toggleEvent';
+import LoginControl from './components/loginConrol/loginConrol';
 
 function App() {
   const author = {
@@ -24,6 +25,7 @@ function App() {
         <Comment author={author} text="Extracting Components" date={today}/>
         <Clock />
         <Toggle />
+        <LoginControl />
       </header>
     </div>
   );

@@ -28,7 +28,7 @@ class Toggle extends React.Component {
         return (
             <div>
                 <div className="sectionDesc">
-                    <h4>Handling Events</h4>
+                    <h3>Handling Events</h3>
                     <ul>
                         <li>React events are named using camelCase, rather than lowercase.</li>
                         <li>With JSX you pass a function as the event handler, rather than a string.</li>
