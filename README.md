@@ -3,193 +3,233 @@
 
 *Learn concepts step by step*, start with our [guide to main concepts](https://reactjs.org/docs/getting-started.html#learn-react).
 
-## 8. Lists and Keys
+## 9. Forms
+HTML form elements work a bit differently from other DOM elements in React, because form elements naturally keep some internal state.  
+It’s convenient to have a JavaScript function that handles the submission of the form and has access to the data that the user entered into the form. The standard way to achieve this is with a technique called “controlled components”.
 
-### Rendering Multiple Components
+### Controlled Components
 
 
-* You can build collections of elements and include them in JSX using curly braces ```{}```.
 
-  * Below, we loop through the ```numbers``` array using the JavaScript map() function. We return a ```<li>``` element for each item. Finally, we assign the resulting array of elements to ```listItems```:  
+* In HTML, form elements such as ```<input>```, ```<textarea>```, and ```<select>``` typically maintain their own state and update it based on user input. In React, mutable state is typically kept in the state property of components, and only updated with ```setState()```.
+
+* We can combine the two by making the React state be the “single source of truth”. Then the React component that renders a form also controls what happens in that form on subsequent user input. An input form element whose value is controlled by React in this way is called a “controlled component”.
+
+  * Since the ```value``` attribute is set on our form element, the displayed value will always be ```this.state.value```, making the React state the source of truth. Since ```handleChange``` runs on every keystroke to update the React state, the displayed value will update as the user types.
   ```javascript
-  // This code displays a bullet list of numbers between 1 and 5.
-  const numbers = [1, 2, 3, 4, 5];
-  const listItems = numbers.map((number) =>
-    <li>{number}</li>
-  );
+  class NameForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: ''};
 
-  // We include the entire listItems array inside a <ul> element, and render it to the DOM:
-  ReactDOM.render(
-    <ul>{listItems}</ul>,
-    document.getElementById('root')
-  );
-  ```
----
-
-### Basic List Component
-
-* Usually you would render lists inside a component.
-  * refactor the previous example into a component that accepts an array of numbers and outputs a list of elements.
-  ```javascript
-  function NumberList(props) {
-  const numbers = props.numbers;
-  const listItems = numbers.map((number) =>
-    <li>{number}</li>
-  );
-  return (
-    <ul>{listItems}</ul>
-  );
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  handleChange(event) {
+    this.setState({value: event.target.value});
+  }
 
-  const numbers = [1, 2, 3, 4, 5];
-  ReactDOM.render(
-    <NumberList numbers={numbers} />,
-    document.getElementById('root')
-  );
+  handleSubmit(event) {
+    alert('A name was submitted: ' + this.state.value);
+    event.preventDefault();
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Name:
+          <input type="text" value={this.state.value} onChange={this.handleChange} />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+    }
+  }
   ```
-  > When you run this code, you’ll be given a warning that a key should be provided for list items. A “key” is a special string attribute you need to include when creating lists of elements.
+---
+
+### The textarea Tag
+
+
+* In HTML, a ```<textarea>``` element defines its text by its children:
+```javascript
+<textarea>
+Hello there, this is some text in a text area
+</textarea>
+```
+
+* In React, a ```<textarea>``` uses a ```value``` attribute instead. This way, a form using a ```<textarea>``` can be written very similarly to a form that uses a single-line input:
+```javascript
+class EssayForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: 'Please write an essay about your favorite DOM element.'
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({value: event.target.value});
+  }
+
+  handleSubmit(event) {
+    alert('An essay was submitted: ' + this.state.value);
+    event.preventDefault();
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Essay:
+          <textarea value={this.state.value} onChange={this.handleChange} />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  }
+}
+```
+
+  > Notice that ```this.state.value``` is initialized in the constructor, so that the text area starts off with some text in it.
 
 ---
 
-### Keys
+### The select Tag
 
-* Keys help React identify which items have changed, are added, or are removed. Keys should be given to the elements inside the array to give the elements a stable identity:
-
-```javascript
-const numbers = [1, 2, 3, 4, 5];
-const listItems = numbers.map((number) =>
-  <li key={number.toString()}>
-    {number}
-  </li>
-);
-```
-* The best way to pick a key is to use a string that uniquely identifies a list item among its siblings. Most often you would use IDs from your data as keys:
+* In HTML, ```<select>``` creates a drop-down list. For example, this HTML creates a drop-down list of flavors. Note that the Coconut option is initially ```selected```, because of the selected attribute. ```
 
 ```javascript
-const todoItems = todos.map((todo) =>
-  <li key={todo.id}>
-    {todo.text}
-  </li>
-);
+<select>
+  <option value="grapefruit">Grapefruit</option>
+  <option value="lime">Lime</option>
+  <option selected value="coconut">Coconut</option>
+  <option value="mango">Mango</option>
+</select>
 ```
-* When you don’t have stable IDs for rendered items, you may use the item index as a key as a last resort:
+* React, instead of using this ```selected``` attribute, uses a ```value``` attribute on the root ```select``` tag. This is more convenient in a controlled component because you only need to update it in one place. For example:
 
 ```javascript
-const todoItems = todos.map((todo, index) =>
-  // Only do this if items have no stable IDs
-  <li key={index}>
-    {todo.text}
-  </li>
-);
+class FlavorForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: 'coconut'};
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({value: event.target.value});
+  }
+
+  handleSubmit(event) {
+    alert('Your favorite flavor is: ' + this.state.value);
+    event.preventDefault();
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Pick your favorite flavor:
+          <select value={this.state.value} onChange={this.handleChange}>
+            <option value="grapefruit">Grapefruit</option>
+            <option value="lime">Lime</option>
+            <option value="coconut">Coconut</option>
+            <option value="mango">Mango</option>
+          </select>
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  }
+}
 ```
+
+> Overall, this makes it so that ```<input type="text">```, ```<textarea>```, and ```<select>``` all work very similarly - they all accept a value attribute that you can use to implement a controlled component.
 
 ---
 
-### Extracting Components with Keys
+### Handling Multiple Inputs
 
-Keys only make sense in the context of the surrounding array. 
+When you need to handle multiple controlled ```input``` elements, you can add a ```name``` attribute to each element and let the handler function choose what to do based on the value of ```event.target.name```.
 
-* For example, if you extract a ```ListItem``` component, you should keep the key on the ```<ListItem />``` elements in the array rather than on the ```<li>``` element in the ```ListItem``` itself.  
-  * Example: Correct Key Usage
-
-```javascript
-function ListItem(props) {
-  // Correct! There is no need to specify the key here:
-  return <li>{props.value}</li>;
-}
-
-function NumberList(props) {
-  const numbers = props.numbers;
-  const listItems = numbers.map((number) =>
-    // Correct! Key should be specified inside the array.
-    <ListItem key={number.toString()} value={number} />
-  );
-  return (
-    <ul>
-      {listItems}
-    </ul>
-  );
-}
-
-const numbers = [1, 2, 3, 4, 5];
-ReactDOM.render(
-  <NumberList numbers={numbers} />,
-  document.getElementById('root')
-);
-```
-> A good rule of thumb is that elements inside the ```map()``` call need keys.
-
----
-
-### Keys Must Only Be Unique Among Siblings
-
-Keys used within arrays should be unique among their siblings. However, they don’t need to be globally unique. We can use the same keys when we produce two different arrays:
+* For example:
 
 ```javascript
-function Blog(props) {
-  const sidebar = (
-    <ul>
-      {props.posts.map((post) =>
-        <li key={post.id}>
-          {post.title}
-        </li>
-      )}
-    </ul>
-  );
-  const content = props.posts.map((post) =>
-    <div key={post.id}>
-      <h3>{post.title}</h3>
-      <p>{post.content}</p>
-    </div>
-  );
-  return (
-    <div>
-      {sidebar}
-      <hr />
-      {content}
-    </div>
-  );
-}
+class Reservation extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isGoing: true,
+      numberOfGuests: 2
+    };
 
-const posts = [
-  {id: 1, title: 'Hello World', content: 'Welcome to learning React!'},
-  {id: 2, title: 'Installation', content: 'You can install React from npm.'}
-];
-ReactDOM.render(
-  <Blog posts={posts} />,
-  document.getElementById('root')
-);
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+  render() {
+    return (
+      <form>
+        <label>
+          Is going:
+          <input
+            name="isGoing"
+            type="checkbox"
+            checked={this.state.isGoing}
+            onChange={this.handleInputChange} />
+        </label>
+        <br />
+        <label>
+          Number of guests:
+          <input
+            name="numberOfGuests"
+            type="number"
+            value={this.state.numberOfGuests}
+            onChange={this.handleInputChange} />
+        </label>
+      </form>
+    );
+  }
+}
 ```
-* Keys serve as a hint to React but they don’t get passed to your components. If you need the same value in your component, pass it explicitly as a prop with a different name:
+> ES6’s “Computed Property Names” feature allows you to have an expression (a piece of code that results in a single value like a variable or function invocation) be computed as a property name on an object.
+
+* Note how we used the [ES6 computed property](https://attacomsian.com/blog/javascript-computed-property-names) name syntax to update the state key corresponding to the given input name:
   ```javascript
-  const content = posts.map((post) =>
-  <Post
-    key={post.id}
-    id={post.id}
-    title={post.title} />
-  );
+  this.setState({
+    [name]: value
+  });
   ```
-  > With the example above, the ```Post``` component can read ```props.id```, but not ```props.key```.
+* It is equivalent to this ES5 code:
+  ```javascript
+  var partialState = {};
+  partialState[name] = value;
+  this.setState(partialState);
+  ```
+Also, since ```setState()``` automatically merges a partial state into the current state, we only needed to call it with the changed parts.
 
 ---
 
-### Embedding map() in JSX
+### Controlled Input Null Value
 
 
-JSX allows embedding any expression in curly braces so we could inline the map() result:
+Specifying the value prop on a controlled component prevents the user from changing the input unless you desire so. If you’ve specified a value but the input is still editable, you may have accidentally set ```value``` to ```undefined``` or ```null```.
 
-
-```javascript
-function NumberList(props) {
-  const numbers = props.numbers;
-  return (
-    <ul>
-      {numbers.map((number) =>
-        <ListItem key={number.toString()}
-                  value={number} />
-      )}
-    </ul>
-  );
-}
-```
+---

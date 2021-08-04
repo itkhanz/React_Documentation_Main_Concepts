@@ -8,6 +8,7 @@ import Toggle from './components/toggleEvent';
 import LoginControl from './components/loginConrol/loginConrol';
 import NumberList from './components/numberList';
 import Blog from './components/blog';
+import NameForm from './components/forms/nameform';
 
 function App() {
   const author = {
@@ -37,6 +38,7 @@ function App() {
         {/* <NumberList numbers={numbers} /> */}
         <Blog posts={posts} />
       </header>
+      <NameForm />
     </div>
   );
 }
