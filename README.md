@@ -3,198 +3,193 @@
 
 *Learn concepts step by step*, start with our [guide to main concepts](https://reactjs.org/docs/getting-started.html#learn-react).
 
-## 7. Conditional Rendering
+## 8. Lists and Keys
 
-In React, you can create distinct components that encapsulate behavior you need. Then, you can render only some of them, depending on the state of your application.
+### Rendering Multiple Components
 
 
+* You can build collections of elements and include them in JSX using curly braces ```{}```.
 
-* Use JavaScript operators like if or the conditional operator to create elements representing the current state, and let React update the UI to match them.
+  * Below, we loop through the ```numbers``` array using the JavaScript map() function. We return a ```<li>``` element for each item. Finally, we assign the resulting array of elements to ```listItems```:  
   ```javascript
-  function UserGreeting(props) {
-    return <h1>Welcome back!</h1>;
-  }
+  // This code displays a bullet list of numbers between 1 and 5.
+  const numbers = [1, 2, 3, 4, 5];
+  const listItems = numbers.map((number) =>
+    <li>{number}</li>
+  );
 
-  function GuestGreeting(props) {
-    return <h1>Please sign up.</h1>;
-  }
-  ```
-  * We’ll create a Greeting component that displays either of these components depending on whether a user is logged in:
-  ```javascript
-  function Greeting(props) {
-  const isLoggedIn = props.isLoggedIn;
-  if (isLoggedIn) {
-    return <UserGreeting />;
-  }
-  return <GuestGreeting />;
-  }
-
+  // We include the entire listItems array inside a <ul> element, and render it to the DOM:
   ReactDOM.render(
-    // Try changing to isLoggedIn={true}:
-    <Greeting isLoggedIn={false} />,
+    <ul>{listItems}</ul>,
     document.getElementById('root')
   );
   ```
-* You can use variables to store elements. This can help you conditionally render a part of the component while the rest of the output doesn’t change.
-  * Consider these two new components representing Logout and Login buttons:
+---
 
+### Basic List Component
+
+* Usually you would render lists inside a component.
+  * refactor the previous example into a component that accepts an array of numbers and outputs a list of elements.
   ```javascript
-  function LoginButton(props) {
-    return (
-      <button onClick={props.onClick}>
-        Login
-      </button>
-    );
+  function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) =>
+    <li>{number}</li>
+  );
+  return (
+    <ul>{listItems}</ul>
+  );
   }
 
-  function LogoutButton(props) {
-    return (
-      <button onClick={props.onClick}>
-        Logout
-      </button>
-    );
-  }
+
+  const numbers = [1, 2, 3, 4, 5];
+  ReactDOM.render(
+    <NumberList numbers={numbers} />,
+    document.getElementById('root')
+  );
   ```
-* In the example below, we will create a ```stateful component``` called ```LoginControl```.
-* It will render either ```<LoginButton />``` or ```<LogoutButton />``` depending on its current state. It will also render a ```<Greeting />``` from the previous example:
+  > When you run this code, you’ll be given a warning that a key should be provided for list items. A “key” is a special string attribute you need to include when creating lists of elements.
+
+---
+
+### Keys
+
+* Keys help React identify which items have changed, are added, or are removed. Keys should be given to the elements inside the array to give the elements a stable identity:
+
 ```javascript
-class LoginControl extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleLoginClick = this.handleLoginClick.bind(this);
-    this.handleLogoutClick = this.handleLogoutClick.bind(this);
-    this.state = {isLoggedIn: false};
-  }
+const numbers = [1, 2, 3, 4, 5];
+const listItems = numbers.map((number) =>
+  <li key={number.toString()}>
+    {number}
+  </li>
+);
+```
+* The best way to pick a key is to use a string that uniquely identifies a list item among its siblings. Most often you would use IDs from your data as keys:
 
-  handleLoginClick() {
-    this.setState({isLoggedIn: true});
-  }
+```javascript
+const todoItems = todos.map((todo) =>
+  <li key={todo.id}>
+    {todo.text}
+  </li>
+);
+```
+* When you don’t have stable IDs for rendered items, you may use the item index as a key as a last resort:
 
-  handleLogoutClick() {
-    this.setState({isLoggedIn: false});
-  }
-
-  render() {
-    const isLoggedIn = this.state.isLoggedIn;
-    let button;
-    if (isLoggedIn) {
-      button = <LogoutButton onClick={this.handleLogoutClick} />;
-    } else {
-      button = <LoginButton onClick={this.handleLoginClick} />;
-    }
-
-    return (
-      <div>
-        <Greeting isLoggedIn={isLoggedIn} />
-        {button}
-      </div>
-    );
-  }
-}
-
-ReactDOM.render(
-  <LoginControl />,
-  document.getElementById('root')
+```javascript
+const todoItems = todos.map((todo, index) =>
+  // Only do this if items have no stable IDs
+  <li key={index}>
+    {todo.text}
+  </li>
 );
 ```
 
 ---
 
-### Inline If with Logical && Operator
-You may embed expressions in JSX by wrapping them in curly braces. This includes the JavaScript logical && operator. It can be handy for conditionally including an element:  
+### Extracting Components with Keys
 
-* It works because in JavaScript, ```true && expression``` always evaluates to ```expression```, and ```false && expression``` always evaluates to ```false```.
-* Therefore, if the condition is ```true```, the element right after ```&&``` will appear in the output. If it is ```false```, React will ignore and skip it.
+Keys only make sense in the context of the surrounding array. 
 
+* For example, if you extract a ```ListItem``` component, you should keep the key on the ```<ListItem />``` elements in the array rather than on the ```<li>``` element in the ```ListItem``` itself.  
+  * Example: Correct Key Usage
 
 ```javascript
-function Mailbox(props) {
-  const unreadMessages = props.unreadMessages;
+function ListItem(props) {
+  // Correct! There is no need to specify the key here:
+  return <li>{props.value}</li>;
+}
+
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) =>
+    // Correct! Key should be specified inside the array.
+    <ListItem key={number.toString()} value={number} />
+  );
+  return (
+    <ul>
+      {listItems}
+    </ul>
+  );
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById('root')
+);
+```
+> A good rule of thumb is that elements inside the ```map()``` call need keys.
+
+---
+
+### Keys Must Only Be Unique Among Siblings
+
+Keys used within arrays should be unique among their siblings. However, they don’t need to be globally unique. We can use the same keys when we produce two different arrays:
+
+```javascript
+function Blog(props) {
+  const sidebar = (
+    <ul>
+      {props.posts.map((post) =>
+        <li key={post.id}>
+          {post.title}
+        </li>
+      )}
+    </ul>
+  );
+  const content = props.posts.map((post) =>
+    <div key={post.id}>
+      <h3>{post.title}</h3>
+      <p>{post.content}</p>
+    </div>
+  );
   return (
     <div>
-      <h1>Hello!</h1>
-      {unreadMessages.length > 0 &&
-        <h2>
-          You have {unreadMessages.length} unread messages.
-        </h2>
-      }
+      {sidebar}
+      <hr />
+      {content}
     </div>
   );
 }
 
-const messages = ['React', 'Re: React', 'Re:Re: React'];
+const posts = [
+  {id: 1, title: 'Hello World', content: 'Welcome to learning React!'},
+  {id: 2, title: 'Installation', content: 'You can install React from npm.'}
+];
 ReactDOM.render(
-  <Mailbox unreadMessages={messages} />,
+  <Blog posts={posts} />,
   document.getElementById('root')
 );
 ```
----
-
-### Inline If-Else with Conditional Operator
-Another method for conditionally rendering elements inline is to use the JavaScript ```conditional operator condition ? true : false```.
-
-* In the example below, we use it to conditionally render a small block of text.
-```javascript
-render() {
-  const isLoggedIn = this.state.isLoggedIn;
-  return (
-    <div>
-      The user is <b>{isLoggedIn ? 'currently' : 'not'}</b> logged in.
-    </div>
+* Keys serve as a hint to React but they don’t get passed to your components. If you need the same value in your component, pass it explicitly as a prop with a different name:
+  ```javascript
+  const content = posts.map((post) =>
+  <Post
+    key={post.id}
+    id={post.id}
+    title={post.title} />
   );
-}
-```
+  ```
+  > With the example above, the ```Post``` component can read ```props.id```, but not ```props.key```.
 
 ---
 
-### Preventing Component from Rendering
-
-In rare cases you might want a component to hide itself even though it was rendered by another component. To do this return ```null``` instead of its render output.
+### Embedding map() in JSX
 
 
+JSX allows embedding any expression in curly braces so we could inline the map() result:
 
-* In the example below, the ```<WarningBanner />``` is rendered depending on the value of the prop called ```warn```. If the value of the prop is ```false```, then the component does not render:
+
 ```javascript
-function WarningBanner(props) {
-  if (!props.warn) {
-    return null;
-  }
-
+function NumberList(props) {
+  const numbers = props.numbers;
   return (
-    <div className="warning">
-      Warning!
-    </div>
+    <ul>
+      {numbers.map((number) =>
+        <ListItem key={number.toString()}
+                  value={number} />
+      )}
+    </ul>
   );
 }
-
-class Page extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {showWarning: true};
-    this.handleToggleClick = this.handleToggleClick.bind(this);
-  }
-
-  handleToggleClick() {
-    this.setState(state => ({
-      showWarning: !state.showWarning
-    }));
-  }
-
-  render() {
-    return (
-      <div>
-        <WarningBanner warn={this.state.showWarning} />
-        <button onClick={this.handleToggleClick}>
-          {this.state.showWarning ? 'Hide' : 'Show'}
-        </button>
-      </div>
-    );
-  }
-}
-
-ReactDOM.render(
-  <Page />,
-  document.getElementById('root')
-);
 ```
-* Returning ```null``` from a component’s ```render``` method does not affect the firing of the component’s lifecycle methods. For instance ```componentDidUpdate``` will still be called.

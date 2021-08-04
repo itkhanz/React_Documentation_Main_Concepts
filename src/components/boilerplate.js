@@ -6,7 +6,7 @@ function Boilerplate(props) {
         <div>
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
                 <img src={logo} className="App-logo" alt="logo" />
-                <p style={{ textAlign: 'center !important' }}>
+                <p>
                 Edit <code>src/App.js</code> and save to reload.
                 </p>
                 <a
@@ -14,7 +14,6 @@ function Boilerplate(props) {
                 href="https://reactjs.org"
                 target="_blank"
                 rel="noopener noreferrer"
-                textAlign= 'center !important'
                 >
                 Learn React
                 </a>
