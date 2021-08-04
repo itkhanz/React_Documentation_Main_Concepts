@@ -9,6 +9,7 @@ import LoginControl from './components/loginConrol/loginConrol';
 import NumberList from './components/numberList';
 import Blog from './components/blog';
 import NameForm from './components/forms/nameform';
+import Calculator from './components/liftingStateUp/calculator';
 
 function App() {
   const author = {
@@ -39,6 +40,7 @@ function App() {
         <Blog posts={posts} />
       </header>
       <NameForm />
+      <Calculator />
     </div>
   );
 }

@@ -3,233 +3,262 @@
 
 *Learn concepts step by step*, start with our [guide to main concepts](https://reactjs.org/docs/getting-started.html#learn-react).
 
-## 9. Forms
-HTML form elements work a bit differently from other DOM elements in React, because form elements naturally keep some internal state.  
-It’s convenient to have a JavaScript function that handles the submission of the form and has access to the data that the user entered into the form. The standard way to achieve this is with a technique called “controlled components”.
+## 10. Lifting State Up
 
-### Controlled Components
-
+Often, several components need to reflect the same changing data. We recommend lifting the shared state up to their closest common ancestor. Let’s see how this works in action.  
+In this section, we will create a temperature calculator that calculates whether the water would boil at a given temperature.
 
 
-* In HTML, form elements such as ```<input>```, ```<textarea>```, and ```<select>``` typically maintain their own state and update it based on user input. In React, mutable state is typically kept in the state property of components, and only updated with ```setState()```.
-
-* We can combine the two by making the React state be the “single source of truth”. Then the React component that renders a form also controls what happens in that form on subsequent user input. An input form element whose value is controlled by React in this way is called a “controlled component”.
-
-  * Since the ```value``` attribute is set on our form element, the displayed value will always be ```this.state.value```, making the React state the source of truth. Since ```handleChange``` runs on every keystroke to update the React state, the displayed value will update as the user types.
+* We will start with a component called ```BoilingVerdict```. It accepts the ```celsius``` temperature as a prop, and prints whether it is enough to boil the water:
   ```javascript
-  class NameForm extends React.Component {
+  function BoilingVerdict(props) {
+    if (props.celsius >= 100) {
+      return <p>The water would boil.</p>;
+    }
+    return <p>The water would not boil.</p>;
+  }
+  ```
+
+* Next, we will create a component called ```Calculator```. It renders an ```<input>``` that lets you enter the temperature, and keeps its value in ```this.state.temperature```.
+
+  * Additionally, it renders the ```BoilingVerdict``` for the current input value.
+
+  ```javascript
+  class Calculator extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: ''};
-
     this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+    this.state = {temperature: ''};
   }
 
-  handleChange(event) {
-    this.setState({value: event.target.value});
-  }
-
-  handleSubmit(event) {
-    alert('A name was submitted: ' + this.state.value);
-    event.preventDefault();
+  handleChange(e) {
+    this.setState({temperature: e.target.value});
   }
 
   render() {
+    const temperature = this.state.temperature;
     return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Name:
-          <input type="text" value={this.state.value} onChange={this.handleChange} />
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
+      <fieldset>
+        <legend>Enter temperature in Celsius:</legend>
+        <input
+          value={temperature}
+          onChange={this.handleChange} />
+        <BoilingVerdict
+          celsius={parseFloat(temperature)} />
+      </fieldset>
     );
+  }
+  }
+  ```
+---
+
+### Adding a Second Input
+Our new requirement is that, in addition to a Celsius input, we provide a Fahrenheit input, and they are kept in sync.
+
+* We can start by extracting a ```TemperatureInput``` component from ```Calculator```. We will add a new ```scale``` prop to it that can either be ```"c"``` or ```"f"```:
+```javascript
+const scaleNames = {
+  c: 'Celsius',
+  f: 'Fahrenheit'
+};
+
+class TemperatureInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.state = {temperature: ''};
+  }
+
+  handleChange(e) {
+    this.setState({temperature: e.target.value});
+  }
+
+  render() {
+    const temperature = this.state.temperature;
+    const scale = this.props.scale;
+    return (
+      <fieldset>
+        <legend>Enter temperature in {scaleNames[scale]}:</legend>
+        <input value={temperature}
+               onChange={this.handleChange} />
+      </fieldset>
+    );
+  }
+}
+```
+
+* We can now change the ```Calculator``` to render two separate temperature inputs:
+
+```javascript
+class Calculator extends React.Component {
+  render() {
+    return (
+      <div>
+        <TemperatureInput scale="c" />
+        <TemperatureInput scale="f" />
+      </div>
+    );
+  }
+}
+```
+
+  > We have two inputs now, but when you enter the temperature in one of them, the other doesn’t update. This contradicts our requirement: we want to keep them in sync.
+
+* We also can’t display the ```BoilingVerdict``` from ```Calculator```. The ```Calculator``` doesn’t know the current temperature because it is hidden inside the ```TemperatureInput```.
+
+---
+
+### Writing Conversion Functions
+* First, we will write two functions to convert from Celsius to Fahrenheit and back:
+  ```javascript
+  function toCelsius(fahrenheit) {
+    return (fahrenheit - 32) * 5 / 9;
+  }
+
+  function toFahrenheit(celsius) {
+    return (celsius * 9 / 5) + 32;
+  }
+  ```
+* These two functions convert numbers. We will write another function that takes a string ```temperature``` and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.  
+  * For example, tryConvert('abc', toCelsius) returns an empty string, and tryConvert('10.22', toFahrenheit) returns '50.396'.
+  ```javascript
+  function tryConvert(temperature, convert) {
+  const input = parseFloat(temperature);
+  if (Number.isNaN(input)) {
+    return '';
+  }
+  const output = convert(input);
+  const rounded = Math.round(output * 1000) / 1000;
+  return rounded.toString();
+  }
+  ```
+
+---
+
+### Lifting State Up
+
+
+Currently, both ```TemperatureInput``` components independently keep their values in the local state. However, we want these two inputs to be in sync with each other. When we update the Celsius input, the Fahrenheit input should reflect the converted temperature, and vice versa.
+
+In React, sharing state is accomplished by moving it up to the closest common ancestor of the components that need it. This is called “lifting state up”. We will remove the local state from the ```TemperatureInput``` and move it into the ```Calculator``` instead.
+
+If the ```Calculator``` owns the shared state, it becomes the “source of truth” for the current temperature in both inputs. It can instruct them both to have values that are consistent with each other. Since the props of both ```TemperatureInput``` components are coming from the same parent ```Calculator``` component, the two inputs will always be in sync.
+
+Let’s see how this works step by step.
+
+* First, we will replace this.state.temperature with this.props.temperature in the TemperatureInput component:
+  ```javascript
+    render() {
+      // Before: const temperature = this.state.temperature;
+      const temperature = this.props.temperature;
+      // ...
+  ```
+  * We know that props are read-only. When the ```temperature``` was in the local state, the ```TemperatureInput``` could just call ```this.setState()``` to change it. However, now that the ```temperature``` is coming from the parent as a prop, the TemperatureInput has no control over it.
+  * In React, this is usually solved by making a component “controlled”. Just like the DOM ```&#60;input&#62;``` accepts both a ```value``` and an ```onChange``` prop, so can the custom ```TemperatureInput``` accept both ```temperature``` and ```onTemperatureChange``` props from its parent ```Calculator```.
+  * Now, when the TemperatureInput wants to update its temperature, it calls this.props.onTemperatureChange:
+  ```javascript
+    handleChange(e) {
+    // Before: this.setState({temperature: e.target.value});
+    this.props.onTemperatureChange(e.target.value);
+    // ...
+  ```
+  * Before diving into the changes in the ```Calculator```, let’s recap our changes to the ```TemperatureInput``` component. We have removed the local state from it, and instead of reading ```this.state.temperature```, we now read this.props.temperature. Instead of calling ```this.setState()``` when we want to make a change, we now call ```this.props.onTemperatureChange()```, which will be provided by the ```Calculator```:
+  ```javascript
+  class TemperatureInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(e) {
+    this.props.onTemperatureChange(e.target.value);
+  }
+
+  render() {
+    const temperature = this.props.temperature;
+    const scale = this.props.scale;
+    return (
+      <fieldset>
+        <legend>Enter temperature in {scaleNames[scale]}:</legend>
+        <input value={temperature}
+               onChange={this.handleChange} />
+      </fieldset>
+    );
+  }
+  }
+  ```
+
+
+* Now let’s turn to the ```Calculator``` component.
+  * We will store the current input’s ```temperature``` and ```scale``` in its local state. This is the state we “lifted up” from the inputs, and it will serve as the “source of truth” for both of them. It is the minimal representation of all the data we need to know in order to render both inputs.```
+  * The inputs stay in sync because their values are computed from the same state:
+
+  ```javascript
+  class Calculator extends React.Component {
+    constructor(props) {
+      super(props);
+      this.handleCelsiusChange = this.handleCelsiusChange.bind(this);
+      this.handleFahrenheitChange = this.handleFahrenheitChange.bind(this);
+      this.state = {temperature: '', scale: 'c'};
+    }
+
+    handleCelsiusChange(temperature) {
+      this.setState({scale: 'c', temperature});
+    }
+
+    handleFahrenheitChange(temperature) {
+      this.setState({scale: 'f', temperature});
+    }
+
+    render() {
+      const scale = this.state.scale;
+      const temperature = this.state.temperature;
+      const celsius = scale === 'f' ? tryConvert(temperature, toCelsius) : temperature;
+      const fahrenheit = scale === 'c' ? tryConvert(temperature, toFahrenheit) : temperature;
+
+      return (
+        <div>
+          <TemperatureInput
+            scale="c"
+            temperature={celsius}
+            onTemperatureChange={this.handleCelsiusChange} />
+          <TemperatureInput
+            scale="f"
+            temperature={fahrenheit}
+            onTemperatureChange={this.handleFahrenheitChange} />
+          <BoilingVerdict
+            celsius={parseFloat(celsius)} />
+        </div>
+      );
     }
   }
   ```
----
-
-### The textarea Tag
-
-
-* In HTML, a ```<textarea>``` element defines its text by its children:
-```javascript
-<textarea>
-Hello there, this is some text in a text area
-</textarea>
-```
-
-* In React, a ```<textarea>``` uses a ```value``` attribute instead. This way, a form using a ```<textarea>``` can be written very similarly to a form that uses a single-line input:
-```javascript
-class EssayForm extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: 'Please write an essay about your favorite DOM element.'
-    };
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({value: event.target.value});
-  }
-
-  handleSubmit(event) {
-    alert('An essay was submitted: ' + this.state.value);
-    event.preventDefault();
-  }
-
-  render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Essay:
-          <textarea value={this.state.value} onChange={this.handleChange} />
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
-    );
-  }
-}
-```
-
-  > Notice that ```this.state.value``` is initialized in the constructor, so that the text area starts off with some text in it.
+  * Now, no matter which input you edit, ```this.state.temperature``` and ```this.state.scale``` in the ```Calculator``` get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.
 
 ---
 
-### The select Tag
+### RECAP
+Let’s recap what happens when you edit an input:
 
-* In HTML, ```<select>``` creates a drop-down list. For example, this HTML creates a drop-down list of flavors. Note that the Coconut option is initially ```selected```, because of the selected attribute. ```
+* React calls the function specified as ```onChange``` on the DOM ```<input>```. In our case, this is the handleChange method in the ```TemperatureInput``` component.
+* The ```handleChange``` method in the ```TemperatureInput``` component calls ```this.props.onTemperatureChange()``` with the new desired value. Its props, including ```onTemperatureChange```, were provided by its parent component, the ```Calculator```.
+* When it previously rendered, the Calculator had specified that ```onTemperatureChange``` of the Celsius ```TemperatureInput``` is the Calculator’s ```handleCelsiusChange``` method, and ```onTemperatureChange``` of the Fahrenheit ```TemperatureInput``` is the Calculator’s ```handleFahrenheitChange``` method. So either of these two ```Calculator``` methods gets called depending on which input we edited.
+* Inside these methods, the Calculator component asks React to re-render itself by calling this.setState() with the new input value and the current scale of the input we just edited.
+* React calls the ```Calculator``` component’s ```render``` method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.
+* React calls the render methods of the individual TemperatureInput components with their new props specified by the Calculator. It learns what their UI should look like.
+* React calls the ```render``` method of the ```BoilingVerdict``` component, passing the temperature in Celsius as its props.
+* React DOM updates the DOM with the boiling verdict and to match the desired input values. The input we just edited receives its current value, and the other input is updated to the temperature after conversion.
 
-```javascript
-<select>
-  <option value="grapefruit">Grapefruit</option>
-  <option value="lime">Lime</option>
-  <option selected value="coconut">Coconut</option>
-  <option value="mango">Mango</option>
-</select>
-```
-* React, instead of using this ```selected``` attribute, uses a ```value``` attribute on the root ```select``` tag. This is more convenient in a controlled component because you only need to update it in one place. For example:
-
-```javascript
-class FlavorForm extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {value: 'coconut'};
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({value: event.target.value});
-  }
-
-  handleSubmit(event) {
-    alert('Your favorite flavor is: ' + this.state.value);
-    event.preventDefault();
-  }
-
-  render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Pick your favorite flavor:
-          <select value={this.state.value} onChange={this.handleChange}>
-            <option value="grapefruit">Grapefruit</option>
-            <option value="lime">Lime</option>
-            <option value="coconut">Coconut</option>
-            <option value="mango">Mango</option>
-          </select>
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
-    );
-  }
-}
-```
-
-> Overall, this makes it so that ```<input type="text">```, ```<textarea>```, and ```<select>``` all work very similarly - they all accept a value attribute that you can use to implement a controlled component.
+Every update goes through the same steps so the inputs stay in sync.
 
 ---
 
-### Handling Multiple Inputs
+### Lessons Learned
 
-When you need to handle multiple controlled ```input``` elements, you can add a ```name``` attribute to each element and let the handler function choose what to do based on the value of ```event.target.name```.
+There should be a single “source of truth” for any data that changes in a React application. Usually, the state is first added to the component that needs it for rendering. Then, if other components also need it, you can lift it up to their closest common ancestor. Instead of trying to sync the state between different components, you should rely on the top-down data flow.
 
-* For example:
+If something can be derived from either props or state, it probably shouldn’t be in the state. For example, instead of storing both ```celsiusValue``` and ```fahrenheitValue```, we store just the last edited ```temperature``` and its ```scale```. The value of the other input can always be calculated from them in the ```render()``` method. This lets us clear or apply rounding to the other field without losing any precision in the user input.
 
-```javascript
-class Reservation extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isGoing: true,
-      numberOfGuests: 2
-    };
-
-    this.handleInputChange = this.handleInputChange.bind(this);
-  }
-
-  handleInputChange(event) {
-    const target = event.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
-
-    this.setState({
-      [name]: value
-    });
-  }
-
-  render() {
-    return (
-      <form>
-        <label>
-          Is going:
-          <input
-            name="isGoing"
-            type="checkbox"
-            checked={this.state.isGoing}
-            onChange={this.handleInputChange} />
-        </label>
-        <br />
-        <label>
-          Number of guests:
-          <input
-            name="numberOfGuests"
-            type="number"
-            value={this.state.numberOfGuests}
-            onChange={this.handleInputChange} />
-        </label>
-      </form>
-    );
-  }
-}
-```
-> ES6’s “Computed Property Names” feature allows you to have an expression (a piece of code that results in a single value like a variable or function invocation) be computed as a property name on an object.
-
-* Note how we used the [ES6 computed property](https://attacomsian.com/blog/javascript-computed-property-names) name syntax to update the state key corresponding to the given input name:
-  ```javascript
-  this.setState({
-    [name]: value
-  });
-  ```
-* It is equivalent to this ES5 code:
-  ```javascript
-  var partialState = {};
-  partialState[name] = value;
-  this.setState(partialState);
-  ```
-Also, since ```setState()``` automatically merges a partial state into the current state, we only needed to call it with the changed parts.
-
----
-
-### Controlled Input Null Value
-
-
-Specifying the value prop on a controlled component prevents the user from changing the input unless you desire so. If you’ve specified a value but the input is still editable, you may have accidentally set ```value``` to ```undefined``` or ```null```.
+![Lift State Up Anomation](https://reactjs.org/ef94afc3447d75cdc245c77efb0d63be/react-devtools-state.gif "Caculator Animation Lifting State Up")
 
 ---
