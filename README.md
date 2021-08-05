@@ -3,262 +3,157 @@
 
 *Learn concepts step by step*, start with our [guide to main concepts](https://reactjs.org/docs/getting-started.html#learn-react).
 
-## 10. Lifting State Up
+## 11. Composition vs Inheritance
 
-Often, several components need to reflect the same changing data. We recommend lifting the shared state up to their closest common ancestor. Let’s see how this works in action.  
-In this section, we will create a temperature calculator that calculates whether the water would boil at a given temperature.
+React has a powerful composition model, and we recommend using composition instead of inheritance to reuse code between components.
 
 
-* We will start with a component called ```BoilingVerdict```. It accepts the ```celsius``` temperature as a prop, and prints whether it is enough to boil the water:
+### Containment
+
+Some components don’t know their children ahead of time. This is especially common for components like Sidebar or Dialog that represent generic “boxes”.
+
+* We recommend that such components use the special ```children``` prop to pass children elements directly into their output:
   ```javascript
-  function BoilingVerdict(props) {
-    if (props.celsius >= 100) {
-      return <p>The water would boil.</p>;
-    }
-    return <p>The water would not boil.</p>;
+  function FancyBorder(props) {
+  return (
+    <div className={'FancyBorder FancyBorder-' + props.color}>
+      {props.children}
+    </div>
+  );
   }
   ```
-
-* Next, we will create a component called ```Calculator```. It renders an ```<input>``` that lets you enter the temperature, and keeps its value in ```this.state.temperature```.
-
-  * Additionally, it renders the ```BoilingVerdict``` for the current input value.
+  This lets other components pass arbitrary children to them by nesting the JSX:
 
   ```javascript
-  class Calculator extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleChange = this.handleChange.bind(this);
-    this.state = {temperature: ''};
-  }
-
-  handleChange(e) {
-    this.setState({temperature: e.target.value});
-  }
-
-  render() {
-    const temperature = this.state.temperature;
-    return (
-      <fieldset>
-        <legend>Enter temperature in Celsius:</legend>
-        <input
-          value={temperature}
-          onChange={this.handleChange} />
-        <BoilingVerdict
-          celsius={parseFloat(temperature)} />
-      </fieldset>
-    );
-  }
+  function WelcomeDialog() {
+  return (
+    <FancyBorder color="blue">
+      <h1 className="Dialog-title">
+        Welcome
+      </h1>
+      <p className="Dialog-message">
+        Thank you for visiting our spacecraft!
+      </p>
+    </FancyBorder>
+  );
   }
   ```
----
+  Anything inside the ```<FancyBorder>``` JSX tag gets passed into the FancyBorder component as a children prop. Since FancyBorder renders ```{props.children}``` inside a ```<div>```, the passed elements appear in the final output.
+  
+* While this is less common, sometimes you might need multiple “holes” in a component. In such cases you may come up with your own convention instead of using children:
 
-### Adding a Second Input
-Our new requirement is that, in addition to a Celsius input, we provide a Fahrenheit input, and they are kept in sync.
-
-* We can start by extracting a ```TemperatureInput``` component from ```Calculator```. We will add a new ```scale``` prop to it that can either be ```"c"``` or ```"f"```:
-```javascript
-const scaleNames = {
-  c: 'Celsius',
-  f: 'Fahrenheit'
-};
-
-class TemperatureInput extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleChange = this.handleChange.bind(this);
-    this.state = {temperature: ''};
-  }
-
-  handleChange(e) {
-    this.setState({temperature: e.target.value});
-  }
-
-  render() {
-    const temperature = this.state.temperature;
-    const scale = this.props.scale;
-    return (
-      <fieldset>
-        <legend>Enter temperature in {scaleNames[scale]}:</legend>
-        <input value={temperature}
-               onChange={this.handleChange} />
-      </fieldset>
-    );
-  }
-}
-```
-
-* We can now change the ```Calculator``` to render two separate temperature inputs:
-
-```javascript
-class Calculator extends React.Component {
-  render() {
-    return (
-      <div>
-        <TemperatureInput scale="c" />
-        <TemperatureInput scale="f" />
+  React elements like ```<Contacts />``` and ```<Chat />``` are just objects, so you can pass them as props like any other data. This approach may remind you of “slots” in other libraries but there are no limitations on what you can pass as props in React.
+  ```javascript
+  function SplitPane(props) {
+  return (
+    <div className="SplitPane">
+      <div className="SplitPane-left">
+        {props.left}
       </div>
-    );
+      <div className="SplitPane-right">
+        {props.right}
+      </div>
+    </div>
+  );
   }
-}
-```
 
-  > We have two inputs now, but when you enter the temperature in one of them, the other doesn’t update. This contradicts our requirement: we want to keep them in sync.
-
-* We also can’t display the ```BoilingVerdict``` from ```Calculator```. The ```Calculator``` doesn’t know the current temperature because it is hidden inside the ```TemperatureInput```.
-
+  function App() {
+  return (
+    <SplitPane
+      left={
+        <Contacts />
+      }
+      right={
+        <Chat />
+      } />
+  );
+  }
+  ```
 ---
 
-### Writing Conversion Functions
-* First, we will write two functions to convert from Celsius to Fahrenheit and back:
+### Specialization
+
+Sometimes we think about components as being “special cases” of other components. For example, we might say that a ```WelcomeDialog``` is a special case of ```Dialog```.
+
+
+* In React, this is also achieved by composition, where a more “specific” component renders a more “generic” one and configures it with props:
+
+
   ```javascript
-  function toCelsius(fahrenheit) {
-    return (fahrenheit - 32) * 5 / 9;
-  }
-
-  function toFahrenheit(celsius) {
-    return (celsius * 9 / 5) + 32;
-  }
-  ```
-* These two functions convert numbers. We will write another function that takes a string ```temperature``` and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.  
-  * For example, tryConvert('abc', toCelsius) returns an empty string, and tryConvert('10.22', toFahrenheit) returns '50.396'.
-  ```javascript
-  function tryConvert(temperature, convert) {
-  const input = parseFloat(temperature);
-  if (Number.isNaN(input)) {
-    return '';
-  }
-  const output = convert(input);
-  const rounded = Math.round(output * 1000) / 1000;
-  return rounded.toString();
-  }
-  ```
-
----
-
-### Lifting State Up
-
-
-Currently, both ```TemperatureInput``` components independently keep their values in the local state. However, we want these two inputs to be in sync with each other. When we update the Celsius input, the Fahrenheit input should reflect the converted temperature, and vice versa.
-
-In React, sharing state is accomplished by moving it up to the closest common ancestor of the components that need it. This is called “lifting state up”. We will remove the local state from the ```TemperatureInput``` and move it into the ```Calculator``` instead.
-
-If the ```Calculator``` owns the shared state, it becomes the “source of truth” for the current temperature in both inputs. It can instruct them both to have values that are consistent with each other. Since the props of both ```TemperatureInput``` components are coming from the same parent ```Calculator``` component, the two inputs will always be in sync.
-
-Let’s see how this works step by step.
-
-* First, we will replace this.state.temperature with this.props.temperature in the TemperatureInput component:
-  ```javascript
-    render() {
-      // Before: const temperature = this.state.temperature;
-      const temperature = this.props.temperature;
-      // ...
-  ```
-  * We know that props are read-only. When the ```temperature``` was in the local state, the ```TemperatureInput``` could just call ```this.setState()``` to change it. However, now that the ```temperature``` is coming from the parent as a prop, the TemperatureInput has no control over it.
-  * In React, this is usually solved by making a component “controlled”. Just like the DOM ```&#60;input&#62;``` accepts both a ```value``` and an ```onChange``` prop, so can the custom ```TemperatureInput``` accept both ```temperature``` and ```onTemperatureChange``` props from its parent ```Calculator```.
-  * Now, when the TemperatureInput wants to update its temperature, it calls this.props.onTemperatureChange:
-  ```javascript
-    handleChange(e) {
-    // Before: this.setState({temperature: e.target.value});
-    this.props.onTemperatureChange(e.target.value);
-    // ...
-  ```
-  * Before diving into the changes in the ```Calculator```, let’s recap our changes to the ```TemperatureInput``` component. We have removed the local state from it, and instead of reading ```this.state.temperature```, we now read this.props.temperature. Instead of calling ```this.setState()``` when we want to make a change, we now call ```this.props.onTemperatureChange()```, which will be provided by the ```Calculator```:
-  ```javascript
-  class TemperatureInput extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(e) {
-    this.props.onTemperatureChange(e.target.value);
-  }
-
-  render() {
-    const temperature = this.props.temperature;
-    const scale = this.props.scale;
+  function Dialog(props) {
     return (
-      <fieldset>
-        <legend>Enter temperature in {scaleNames[scale]}:</legend>
-        <input value={temperature}
-               onChange={this.handleChange} />
-      </fieldset>
+      <FancyBorder color="blue">
+        <h1 className="Dialog-title">
+          {props.title}
+        </h1>
+        <p className="Dialog-message">
+          {props.message}
+        </p>
+      </FancyBorder>
     );
   }
+
+  function WelcomeDialog() {
+    return (
+      <Dialog
+        title="Welcome"
+        message="Thank you for visiting our spacecraft!" />
+    );
   }
   ```
 
-
-* Now let’s turn to the ```Calculator``` component.
-  * We will store the current input’s ```temperature``` and ```scale``` in its local state. This is the state we “lifted up” from the inputs, and it will serve as the “source of truth” for both of them. It is the minimal representation of all the data we need to know in order to render both inputs.```
-  * The inputs stay in sync because their values are computed from the same state:
+* Composition works equally well for components defined as classes:
 
   ```javascript
-  class Calculator extends React.Component {
+  function Dialog(props) {
+    return (
+      <FancyBorder color="blue">
+        <h1 className="Dialog-title">
+          {props.title}
+        </h1>
+        <p className="Dialog-message">
+          {props.message}
+        </p>
+        {props.children}
+      </FancyBorder>
+    );
+  }
+
+  class SignUpDialog extends React.Component {
     constructor(props) {
       super(props);
-      this.handleCelsiusChange = this.handleCelsiusChange.bind(this);
-      this.handleFahrenheitChange = this.handleFahrenheitChange.bind(this);
-      this.state = {temperature: '', scale: 'c'};
-    }
-
-    handleCelsiusChange(temperature) {
-      this.setState({scale: 'c', temperature});
-    }
-
-    handleFahrenheitChange(temperature) {
-      this.setState({scale: 'f', temperature});
+      this.handleChange = this.handleChange.bind(this);
+      this.handleSignUp = this.handleSignUp.bind(this);
+      this.state = {login: ''};
     }
 
     render() {
-      const scale = this.state.scale;
-      const temperature = this.state.temperature;
-      const celsius = scale === 'f' ? tryConvert(temperature, toCelsius) : temperature;
-      const fahrenheit = scale === 'c' ? tryConvert(temperature, toFahrenheit) : temperature;
-
       return (
-        <div>
-          <TemperatureInput
-            scale="c"
-            temperature={celsius}
-            onTemperatureChange={this.handleCelsiusChange} />
-          <TemperatureInput
-            scale="f"
-            temperature={fahrenheit}
-            onTemperatureChange={this.handleFahrenheitChange} />
-          <BoilingVerdict
-            celsius={parseFloat(celsius)} />
-        </div>
+        <Dialog title="Mars Exploration Program"
+                message="How should we refer to you?">
+          <input value={this.state.login}
+                onChange={this.handleChange} />
+          <button onClick={this.handleSignUp}>
+            Sign Me Up!
+          </button>
+        </Dialog>
       );
+    }
+
+    handleChange(e) {
+      this.setState({login: e.target.value});
+    }
+
+    handleSignUp() {
+      alert(`Welcome aboard, ${this.state.login}!`);
     }
   }
   ```
-  * Now, no matter which input you edit, ```this.state.temperature``` and ```this.state.scale``` in the ```Calculator``` get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.
 
----
+### So What About Inheritance?
 
-### RECAP
-Let’s recap what happens when you edit an input:
+Props and composition give you all the flexibility you need to customize a component’s look and behavior in an explicit and safe way. Remember that components may accept arbitrary props, including primitive values, React elements, or functions.
 
-* React calls the function specified as ```onChange``` on the DOM ```<input>```. In our case, this is the handleChange method in the ```TemperatureInput``` component.
-* The ```handleChange``` method in the ```TemperatureInput``` component calls ```this.props.onTemperatureChange()``` with the new desired value. Its props, including ```onTemperatureChange```, were provided by its parent component, the ```Calculator```.
-* When it previously rendered, the Calculator had specified that ```onTemperatureChange``` of the Celsius ```TemperatureInput``` is the Calculator’s ```handleCelsiusChange``` method, and ```onTemperatureChange``` of the Fahrenheit ```TemperatureInput``` is the Calculator’s ```handleFahrenheitChange``` method. So either of these two ```Calculator``` methods gets called depending on which input we edited.
-* Inside these methods, the Calculator component asks React to re-render itself by calling this.setState() with the new input value and the current scale of the input we just edited.
-* React calls the ```Calculator``` component’s ```render``` method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.
-* React calls the render methods of the individual TemperatureInput components with their new props specified by the Calculator. It learns what their UI should look like.
-* React calls the ```render``` method of the ```BoilingVerdict``` component, passing the temperature in Celsius as its props.
-* React DOM updates the DOM with the boiling verdict and to match the desired input values. The input we just edited receives its current value, and the other input is updated to the temperature after conversion.
-
-Every update goes through the same steps so the inputs stay in sync.
-
----
-
-### Lessons Learned
-
-There should be a single “source of truth” for any data that changes in a React application. Usually, the state is first added to the component that needs it for rendering. Then, if other components also need it, you can lift it up to their closest common ancestor. Instead of trying to sync the state between different components, you should rely on the top-down data flow.
-
-If something can be derived from either props or state, it probably shouldn’t be in the state. For example, instead of storing both ```celsiusValue``` and ```fahrenheitValue```, we store just the last edited ```temperature``` and its ```scale```. The value of the other input can always be calculated from them in the ```render()``` method. This lets us clear or apply rounding to the other field without losing any precision in the user input.
-
-![Lift State Up Anomation](https://reactjs.org/ef94afc3447d75cdc245c77efb0d63be/react-devtools-state.gif "Caculator Animation Lifting State Up")
+If you want to reuse non-UI functionality between components, we suggest extracting it into a separate JavaScript module. The components may import it and use that function, object, or a class, without extending it.
 
 ---

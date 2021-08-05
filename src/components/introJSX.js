@@ -26,11 +26,11 @@ function IntroducingJSX(props) {
     // const element = <h1>Hello, world!</h1>;
 
     // You can put any valid JavaScript expression inside the curly braces in JSX. 
-    const element = (
-        <h1>
-        Hello, {formatName(user)}!
-        </h1>
-    );
+    // const element = (
+    //     <h1>
+    //     Hello, {formatName(user)}!
+    //     </h1>
+    // );
     
     return (
         <div>
