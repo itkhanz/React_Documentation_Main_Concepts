@@ -240,3 +240,12 @@ You can start seeing how your application will behave: set ```filterText``` to `
 
 ---
 
+##  Step 5: Add Inverse Data Flow
+
+So far, we’ve built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it’s time to support data flowing the other way: the form components deep in the hierarchy need to update the state in ```FilterableProductTable```.
+
+If you try to type or check the box in the current version of the example, you’ll see that React ignores your input. This is intentional, as we’ve set the ```value``` prop of the ```input``` to always be equal to the ```state``` passed in from ```FilterableProductTable.```
+
+Let’s think about what we want to happen. We want to make sure that whenever the user changes the form, we update the state to reflect the user input. Since components should only update their own state, ```FilterableProductTable``` will pass callbacks to ```SearchBar``` that will fire whenever the state should be updated. We can use the onChange event on the inputs to be notified of it. The callbacks passed by ```FilterableProductTable``` will call ```setState()```, and the app will be updated.
+
+---
