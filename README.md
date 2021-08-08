@@ -192,6 +192,51 @@ export default class ProductRow extends React.Component {
 }
 ```
 
+## Step 3: Identify The Minimal (but complete) Representation Of UI State
 
+To make your UI interactive, you need to be able to trigger changes to your underlying data model. React achieves this with ```state```.
+
+To build your app correctly, you first need to think of the minimal set of mFigure out the absolute minimal representation of the state your application needs and compute everything else you need on-demand.
+
+Think of all the pieces of data in our example application. We have:
+* The original list of products
+* The search text the user has entered
+* The value of the checkbox
+* The filtered list of products
+
+Let’s go through each one and figure out which one is state. Ask three questions about each piece of data:  
+* Is it passed in from a parent via props? If so, it probably isn’t state.
+* Does it remain unchanged over time? If so, it probably isn’t state.
+* Can you compute it based on any other state or props in your component? If so, it isn’t state.
+
+> The original list of products is passed in as props, so that’s not state. The search text and the checkbox seem to be state since they change over time and can’t be computed from anything. And finally, the filtered list of products isn’t state because it can be computed by combining the original list of products with the search text and value of the checkbox.
+
+So finally, our state is:
+* The search text the user has entered
+* The value of the checkbox
+---
+
+##  Step 4: Identify Where Your State Should Live
+OK, so we’ve identified what the minimal set of app state is. Next, we need to identify which component mutates, or owns, this state.
+
+Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. **This is often the most challenging part for newcomers to understand**, so follow these steps to figure it out:
+
+For each piece of state in your application:
+
+* Identify every component that renders something based on that state.  
+* Find a common owner component (a single component above all the components that need the state in the hierarchy).  
+* Either the common owner or another component higher up in the hierarchy should own the state.  
+* If you can’t find a component where it makes sense to own the state, create a new component solely for holding the state and add it somewhere in the hierarchy above the common owner component.
+
+Let’s run through this strategy for our application:
+
+* ```ProductTable``` needs to filter the product list based on state and ```SearchBar``` needs to display the search text and checked state.  
+* The common owner component is ```FilterableProductTable```.  
+* It conceptually makes sense for the filter text and checked value to live in ```FilterableProductTable```.
+
+Cool, so we’ve decided that our state lives in ```FilterableProductTable```. First, add an instance property ```this.state = {filterText: '', inStockOnly: false}``` to ```FilterableProductTable```’s ```constructor``` to reflect the initial state of your application. Then, pass ```filterText``` and ```inStockOnly``` to ```ProductTable``` and ```SearchBar``` as a prop. Finally, use these props to filter the rows in ProductTable and set the values of the form fields in ```SearchBar```.```
+
+You can start seeing how your application will behave: set ```filterText``` to ```"ball"``` and refresh your app. You’ll see that the data table is updated correctly.
 
 ---
+
