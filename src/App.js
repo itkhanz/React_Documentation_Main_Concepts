@@ -13,6 +13,7 @@ import Calculator from './components/liftingStateUp/calculator';
 import WelcomeDialog from './components/composition/dialog/welcomeDialog';
 import {Contacts, Chat, SplitPane} from './components/composition/splitPane/splitPane';
 import SignUpDialog from './components/composition/dialog/signupDialog';
+import FilterableProductTable from './components/productInventory/filterableProductTable';
 
 function App() {
   const author = {
@@ -26,6 +27,19 @@ function App() {
     {id: 1, title: 'Hello World', content: 'Welcome to learning React!'},
     {id: 2, title: 'Installation', content: 'You can install React from npm.'}
   ];
+
+  // const PRODUCTS = [
+  //   {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
+  //   {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
+  //   {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
+  //   {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
+  //   {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
+  //   {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}
+  // ];
+
+  const inventory = require('./components/productInventory/products.json');
+  const PRODUCTS = inventory.products;
+  // console.log(PRODUCTS);
 
   return (
     <div className="App">
@@ -52,6 +66,7 @@ function App() {
         <SignUpDialog />
         <hr></hr>
       </div>
+      <FilterableProductTable products={PRODUCTS} />
       
     </div>
   );

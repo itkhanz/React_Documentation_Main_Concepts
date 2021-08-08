@@ -12,9 +12,9 @@ function Dialog(props) {
         <h2 className="Dialog-title">
             {props.title}
         </h2>
-        <p className="Dialog-message">
+        <div className="Dialog-message">
             {props.message}
-        </p>
+        </div>
         {props.children}
         </FancyBorder>
     );
