@@ -36,6 +36,18 @@ class FilterableProductTable extends React.Component {
     render() {
         return (
         <div>
+            <div className="sectionDesc">
+                    <h3>Thinking in React</h3>
+                    <ol>
+                        <li>Start With A Mock</li>
+                        <li>Break The UI Into A Component Hierarchy</li>
+                        <li>Build A Static Version in React</li>
+                        <li>Identify The Minimal (but complete) Representation Of UI State</li>
+                        <li>Identify Where Your State Should Live</li>
+                        <li>Add Inverse Data Flow</li>
+                    </ol>
+            </div>
+
             <SearchBar filterText={this.state.filterText}
                        inStockOnly={this.state.inStockOnly}
                        onFilterTextChange={this.handleFilterTextChange}
@@ -43,6 +55,7 @@ class FilterableProductTable extends React.Component {
             <ProductTable products={this.props.products}
                           filterText={this.state.filterText}
                           inStockOnly={this.state.inStockOnly} />
+            <hr></hr>
         </div>
         );
     }
