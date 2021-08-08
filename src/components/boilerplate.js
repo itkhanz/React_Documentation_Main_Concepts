@@ -7,7 +7,7 @@ function Boilerplate(props) {
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
                 <img src={logo} className="App-logo" alt="logo" />
                 <p>
-                Edit <code>src/App.js</code> and save to reload.
+                Implementation of the React Main Concepts official documentation.
                 </p>
                 <a
                 className="App-link"

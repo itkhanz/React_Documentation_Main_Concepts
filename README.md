@@ -1,6 +1,6 @@
 # Learn React
 
-![React Logo](http://assets.stickpng.com/images/584830f5cef1014c0b5e4aa1.png "React logo")
+![React Logo](https://github.com/itkhanz/React_Documentation_Main_Concepts/blob/main/public/logo192.png?raw=true "React logo")
 
 
 *Learn concepts step by step*, start with our [guide to main concepts]().
